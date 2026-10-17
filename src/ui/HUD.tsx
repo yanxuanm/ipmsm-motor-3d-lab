@@ -6,7 +6,8 @@ import { PhysicsGuideModal, PhysicsTopicId, GuideModalTab } from './PhysicsGuide
 import { LatexMath } from './LatexMath';
 import {
   Play, Pause, StepForward, RotateCcw, Eye, Layers, Compass,
-  Activity, Cpu, Sliders, ChevronDown, ChevronUp, Zap, BookOpen, GraduationCap
+  Activity, Cpu, Sliders, ChevronDown, ChevronUp, Zap, BookOpen, GraduationCap,
+  Sun, Moon
 } from './Icons';
 
 export function getComponentChineseName(id: string | null): string {
@@ -41,6 +42,8 @@ interface HUDProps {
   onUpdateState: (updates: Partial<SimulationState>) => void;
   onSelectCameraPreset: (presetId: string) => void;
   hoveredPartId: string | null;
+  theme?: 'dark' | 'light';
+  onToggleTheme?: () => void;
 }
 
 export const HUD: React.FC<HUDProps> = ({
@@ -48,7 +51,9 @@ export const HUD: React.FC<HUDProps> = ({
   electrical,
   onUpdateState,
   onSelectCameraPreset,
-  hoveredPartId
+  hoveredPartId,
+  theme = 'dark',
+  onToggleTheme
 }) => {
   const [showOscilloscope, setShowOscilloscope] = useState(true);
   const [vectorTab, setVectorTab] = useState<'vectors' | 'torque' | 'foc' | 'thermal'>('vectors');
@@ -245,6 +250,33 @@ export const HUD: React.FC<HUDProps> = ({
               {electrical.efficiency.toFixed(1)} <span className="text-[10px] text-slate-400 font-normal">%</span>
             </span>
           </div>
+
+          {/* Theme Switcher Button */}
+          {onToggleTheme && (
+            <button
+              type="button"
+              onClick={onToggleTheme}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all cursor-pointer shadow-sm text-xs font-mono ml-1 font-semibold hover:scale-105 active:scale-95"
+              style={{
+                backgroundColor: theme === 'light' ? '#f1f5f9' : 'rgba(15, 23, 42, 0.9)',
+                borderColor: theme === 'light' ? '#cbd5e1' : 'rgba(51, 65, 85, 0.8)',
+                color: theme === 'light' ? '#0f172a' : '#f8fafc',
+              }}
+              title={theme === 'dark' ? '切换为明亮模式 (Light Mode)' : '切换为暗黑模式 (Dark Mode)'}
+            >
+              {theme === 'dark' ? (
+                <>
+                  <Sun size={14} className="text-amber-400" />
+                  <span className="text-[11px] font-bold">明亮</span>
+                </>
+              ) : (
+                <>
+                  <Moon size={14} className="text-indigo-600" />
+                  <span className="text-[11px] font-bold">暗黑</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
       </header>
 
@@ -1007,7 +1039,7 @@ export const HUD: React.FC<HUDProps> = ({
         </div>
 
         {showOscilloscope && (
-          <Oscilloscope electrical={electrical} state={state} />
+          <Oscilloscope electrical={electrical} state={state} theme={theme} />
         )}
       </footer>
 
@@ -1027,6 +1059,7 @@ export const HUD: React.FC<HUDProps> = ({
         initialStepIndex={guideStepIndex}
         onClose={handleCloseGuide}
         onApplyDemo={handleApplyDemo}
+        theme={theme}
       />
     </div>
   );

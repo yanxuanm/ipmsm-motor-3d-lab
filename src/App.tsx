@@ -39,6 +39,39 @@ export const App: React.FC = () => {
 
   const [hoveredPartId, setHoveredPartId] = useState<string | null>(null);
 
+  // Theme state ('dark' | 'light') with local persistence
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    try {
+      const saved = localStorage.getItem('ipmsm_theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+    } catch {
+      // ignore storage access restrictions
+    }
+    return 'dark';
+  });
+
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('ipmsm_theme', theme);
+    } catch {}
+    if (theme === 'light') {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+      document.documentElement.setAttribute('data-theme', 'light');
+    } else {
+      document.documentElement.classList.remove('light');
+      document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+    if (motorSceneRef.current) {
+      motorSceneRef.current.setTheme(theme);
+    }
+  }, [theme]);
+
   // Initialize MotorScene
   useEffect(() => {
     if (!containerRef.current) return;
@@ -52,6 +85,7 @@ export const App: React.FC = () => {
       }
     });
 
+    scene.setTheme(theme);
     motorSceneRef.current = scene;
 
     const handleResize = () => scene.resize();
@@ -125,23 +159,26 @@ export const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#07090e]">
+    <div className={`relative w-screen h-screen overflow-hidden transition-colors duration-300 ${theme === 'light' ? 'bg-[#eef2f6]' : 'bg-[#07090e]'}`}>
       {/* 3D WebGL Canvas Viewport */}
       <div ref={containerRef} className="w-full h-full" />
 
-      {/* Industrial Dark HUD Overlay */}
+      {/* Industrial Dark / Engineering Light HUD Overlay */}
       <HUD
         state={state}
         electrical={electrical}
         onUpdateState={handleUpdateState}
         onSelectCameraPreset={handleSelectCameraPreset}
         hoveredPartId={hoveredPartId}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       {/* Component Encyclopedia Inspection Card */}
       <EncyclopediaModal
         selectedId={state.selectedPartId}
         onClose={() => setState(prev => ({ ...prev, selectedPartId: null }))}
+        theme={theme}
       />
     </div>
   );

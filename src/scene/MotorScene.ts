@@ -86,6 +86,14 @@ export class MotorScene {
   private interactiveMeshes: THREE.Object3D[] = [];
   private cleanupEvents: (() => void) | null = null;
 
+  // Lighting references for theme switching
+  private ambientLight!: THREE.AmbientLight;
+  private keyLight!: THREE.DirectionalLight;
+  private fillLight!: THREE.DirectionalLight;
+  private rimLight!: THREE.DirectionalLight;
+  private bottomLight!: THREE.PointLight;
+  private currentTheme: 'dark' | 'light' = 'dark';
+
   constructor(container: HTMLElement, callbacks: MotorSceneCallbacks) {
     this.container = container;
     this.callbacks = callbacks;
@@ -181,24 +189,24 @@ export class MotorScene {
   }
 
   private setupLighting(): void {
-    const ambient = new THREE.AmbientLight(0x1e293b, 1.4);
-    this.scene.add(ambient);
+    this.ambientLight = new THREE.AmbientLight(0x1e293b, 1.4);
+    this.scene.add(this.ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xf8fafc, 2.6);
-    keyLight.position.set(160, 220, 180);
-    this.scene.add(keyLight);
+    this.keyLight = new THREE.DirectionalLight(0xf8fafc, 2.6);
+    this.keyLight.position.set(160, 220, 180);
+    this.scene.add(this.keyLight);
 
-    const fillLight = new THREE.DirectionalLight(0x38bdf8, 1.5);
-    fillLight.position.set(-180, -120, 140);
-    this.scene.add(fillLight);
+    this.fillLight = new THREE.DirectionalLight(0x38bdf8, 1.5);
+    this.fillLight.position.set(-180, -120, 140);
+    this.scene.add(this.fillLight);
 
-    const rimLight = new THREE.DirectionalLight(0xf59e0b, 1.8);
-    rimLight.position.set(0, 160, -200);
-    this.scene.add(rimLight);
+    this.rimLight = new THREE.DirectionalLight(0xf59e0b, 1.8);
+    this.rimLight.position.set(0, 160, -200);
+    this.scene.add(this.rimLight);
 
-    const bottomLight = new THREE.PointLight(0x00f2fe, 1.2, 500);
-    bottomLight.position.set(0, -180, 0);
-    this.scene.add(bottomLight);
+    this.bottomLight = new THREE.PointLight(0x00f2fe, 1.2, 500);
+    this.bottomLight.position.set(0, -180, 0);
+    this.scene.add(this.bottomLight);
   }
 
   private setupExplodedHierarchy(): void {
@@ -662,6 +670,61 @@ export class MotorScene {
 
   public setCameraPreset(presetId: string): void {
     this.cameraManager.setPreset(presetId);
+  }
+
+  public setTheme(theme: 'dark' | 'light'): void {
+    this.currentTheme = theme;
+    if (theme === 'light') {
+      // Crisp industrial CAD studio lighting & background (like Siemens NX / SolidWorks)
+      this.scene.background = new THREE.Color(0xeef2f6);
+      this.scene.fog = new THREE.FogExp2(0xeef2f6, 0.0014);
+
+      if (this.ambientLight) {
+        this.ambientLight.color.setHex(0xffffff);
+        this.ambientLight.intensity = 1.9;
+      }
+      if (this.keyLight) {
+        this.keyLight.color.setHex(0xffffff);
+        this.keyLight.intensity = 2.4;
+      }
+      if (this.fillLight) {
+        this.fillLight.color.setHex(0xb0c4de);
+        this.fillLight.intensity = 1.2;
+      }
+      if (this.rimLight) {
+        this.rimLight.color.setHex(0x94a3b8);
+        this.rimLight.intensity = 1.0;
+      }
+      if (this.bottomLight) {
+        this.bottomLight.color.setHex(0x38bdf8);
+        this.bottomLight.intensity = 0.6;
+      }
+    } else {
+      // Cyberpunk deep-space industrial dark mode
+      this.scene.background = new THREE.Color(0x07090e);
+      this.scene.fog = new THREE.FogExp2(0x07090e, 0.0016);
+
+      if (this.ambientLight) {
+        this.ambientLight.color.setHex(0x1e293b);
+        this.ambientLight.intensity = 1.4;
+      }
+      if (this.keyLight) {
+        this.keyLight.color.setHex(0xf8fafc);
+        this.keyLight.intensity = 2.6;
+      }
+      if (this.fillLight) {
+        this.fillLight.color.setHex(0x38bdf8);
+        this.fillLight.intensity = 1.5;
+      }
+      if (this.rimLight) {
+        this.rimLight.color.setHex(0xf59e0b);
+        this.rimLight.intensity = 1.8;
+      }
+      if (this.bottomLight) {
+        this.bottomLight.color.setHex(0x00f2fe);
+        this.bottomLight.intensity = 1.2;
+      }
+    }
   }
 
   public setCutaway(enabled: boolean): void {

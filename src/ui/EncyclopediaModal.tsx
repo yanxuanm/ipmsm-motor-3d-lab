@@ -239,9 +239,10 @@ const COMPONENT_DATABASE: Record<string, ComponentInfo> = {
 interface EncyclopediaModalProps {
   selectedId: string | null;
   onClose: () => void;
+  theme?: 'dark' | 'light';
 }
 
-export const EncyclopediaModal: React.FC<EncyclopediaModalProps> = ({ selectedId, onClose }) => {
+export const EncyclopediaModal: React.FC<EncyclopediaModalProps> = ({ selectedId, onClose, theme }) => {
   if (!selectedId) return null;
 
   // Normalize ID lookup

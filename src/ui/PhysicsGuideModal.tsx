@@ -807,6 +807,7 @@ interface PhysicsGuideModalProps {
   initialStepIndex?: number;
   onClose: () => void;
   onApplyDemo: (updates: Partial<SimulationState>, cameraPreset?: string) => void;
+  theme?: 'dark' | 'light';
 }
 
 export const PhysicsGuideModal: React.FC<PhysicsGuideModalProps> = React.memo(({
@@ -815,7 +816,8 @@ export const PhysicsGuideModal: React.FC<PhysicsGuideModalProps> = React.memo(({
   initialTab = 'ladder',
   initialStepIndex = 1,
   onClose,
-  onApplyDemo
+  onApplyDemo,
+  theme = 'dark'
 }) => {
   const [activeTab, setActiveTab] = useState<GuideModalTab>(initialTab);
   const [currentStepNum, setCurrentStepNum] = useState<number>(initialStepIndex);
