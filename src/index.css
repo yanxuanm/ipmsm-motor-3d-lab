@@ -191,8 +191,9 @@ html.light [class*="bg-cyan-950"] {
 }
 html.light [class*="text-cyan-400"],
 html.light [class*="text-cyan-300"],
-html.light [class*="text-cyan-200"] {
-  color: #0284c7 !important;
+html.light [class*="text-cyan-200"],
+html.light [class*="text-cyan-100"] {
+  color: #0369a1 !important;
 }
 
 html.light [class*="bg-emerald-950"] {
@@ -201,8 +202,9 @@ html.light [class*="bg-emerald-950"] {
 }
 html.light [class*="text-emerald-400"],
 html.light [class*="text-emerald-300"],
-html.light [class*="text-emerald-200"] {
-  color: #047857 !important;
+html.light [class*="text-emerald-200"],
+html.light [class*="text-emerald-100"] {
+  color: #065f46 !important;
 }
 
 html.light [class*="bg-amber-950"] {
@@ -211,8 +213,9 @@ html.light [class*="bg-amber-950"] {
 }
 html.light [class*="text-amber-400"],
 html.light [class*="text-amber-300"],
-html.light [class*="text-amber-200"] {
-  color: #b45309 !important;
+html.light [class*="text-amber-200"],
+html.light [class*="text-amber-100"] {
+  color: #92400e !important;
 }
 
 html.light [class*="bg-indigo-950"] {
@@ -221,8 +224,9 @@ html.light [class*="bg-indigo-950"] {
 }
 html.light [class*="text-indigo-400"],
 html.light [class*="text-indigo-300"],
-html.light [class*="text-indigo-200"] {
-  color: #4338ca !important;
+html.light [class*="text-indigo-200"],
+html.light [class*="text-indigo-100"] {
+  color: #3730a3 !important;
 }
 
 html.light [class*="bg-rose-950"] {
@@ -231,8 +235,9 @@ html.light [class*="bg-rose-950"] {
 }
 html.light [class*="text-rose-400"],
 html.light [class*="text-rose-300"],
-html.light [class*="text-rose-200"] {
-  color: #be123c !important;
+html.light [class*="text-rose-200"],
+html.light [class*="text-rose-100"] {
+  color: #9f1239 !important;
 }
 
 html.light [class*="bg-purple-950"] {
@@ -243,7 +248,7 @@ html.light [class*="text-purple-400"],
 html.light [class*="text-purple-300"],
 html.light [class*="text-purple-200"],
 html.light [class*="text-purple-100"] {
-  color: #7e22ce !important;
+  color: #6b21a8 !important;
 }
 
 html.light [class*="bg-red-950"] {
@@ -261,7 +266,8 @@ html.light [class*="bg-sky-950"] {
 }
 html.light [class*="text-sky-400"],
 html.light [class*="text-sky-300"],
-html.light [class*="text-sky-200"] {
+html.light [class*="text-sky-200"],
+html.light [class*="text-sky-100"] {
   color: #0369a1 !important;
 }
 
@@ -270,8 +276,10 @@ html.light [class*="bg-blue-950"] {
   border-color: rgba(96, 165, 250, 0.5) !important;
 }
 html.light [class*="text-blue-400"],
-html.light [class*="text-blue-300"] {
-  color: #1d4ed8 !important;
+html.light [class*="text-blue-300"],
+html.light [class*="text-blue-200"],
+html.light [class*="text-blue-100"] {
+  color: #1e40af !important;
 }
 
 /* Range input styling in Light mode */

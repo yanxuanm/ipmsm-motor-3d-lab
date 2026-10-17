@@ -1132,26 +1132,26 @@ export const PhysicsGuideModal: React.FC<PhysicsGuideModalProps> = React.memo(({
                   <Sparkles size={15} />
                   <span>{currentStep.analogy.title}</span>
                 </div>
-                <p className="text-xs text-emerald-100 leading-relaxed">
+                <p className="text-xs text-emerald-950 dark:text-emerald-100 leading-relaxed font-medium">
                   <MathText text={currentStep.analogy.body} />
                 </p>
               </div>
 
               {/* High School Engineering FAQ (Amber Box) */}
               <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-500/30 flex flex-col gap-1.5 shadow-md">
-                <div className="text-xs font-bold text-amber-300 font-mono flex items-center gap-2">
+                <div className="text-xs font-bold text-amber-400 dark:text-amber-300 font-mono flex items-center gap-2">
                   <span>❓ 高中生深度疑问：</span>
                   <MathText text={currentStep.faq.question} />
                 </div>
-                <div className="text-xs text-amber-100/90 leading-relaxed pl-4 border-l-2 border-amber-500/50 mt-1">
-                  <strong>💡 工程揭秘：</strong>
+                <div className="text-xs text-amber-950 dark:text-amber-100/90 leading-relaxed pl-4 border-l-2 border-amber-500/50 mt-1 font-medium">
+                  <strong className="text-amber-900 dark:text-amber-300 font-bold">💡 工程揭秘：</strong>
                   <MathText text={currentStep.faq.answer} />
                 </div>
               </div>
 
               {/* EV Industry Practice Case Study (Purple/Blue Box) */}
               <div className="p-4 rounded-xl bg-purple-950/20 border border-purple-500/30 flex flex-col gap-1.5 shadow-md">
-                <div className="flex items-center justify-between text-xs font-bold text-purple-300 font-mono">
+                <div className="flex items-center justify-between text-xs font-bold text-purple-400 dark:text-purple-300 font-mono">
                   <span className="flex items-center gap-2">
                     <span>🏎️ 工业实战案例：</span>
                     <span><MathText text={currentStep.industryCase.headline} /></span>
@@ -1160,7 +1160,7 @@ export const PhysicsGuideModal: React.FC<PhysicsGuideModalProps> = React.memo(({
                     {currentStep.industryCase.vehicle}
                   </span>
                 </div>
-                <p className="text-xs text-purple-100/90 leading-relaxed mt-1">
+                <p className="text-xs text-purple-950 dark:text-purple-100/90 leading-relaxed mt-1 font-medium">
                   <MathText text={currentStep.industryCase.analysis} />
                 </p>
               </div>
@@ -1333,7 +1333,7 @@ export const PhysicsGuideModal: React.FC<PhysicsGuideModalProps> = React.memo(({
               </div>
 
               {/* Intuitive Physical Analogy */}
-              <div className="p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-xs text-emerald-100 leading-relaxed">
+              <div className="p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-xs text-emerald-950 dark:text-emerald-100 leading-relaxed font-medium">
                 <strong className="text-emerald-400 font-bold">🎯 物理直觉类比：</strong>
                 <MathText text={activeTopic.analogy} />
               </div>
