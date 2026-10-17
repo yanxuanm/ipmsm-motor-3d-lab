@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SimulationState } from '../types/motor';
-import { X, Cpu, Zap, Compass, Activity, Layers } from './Icons';
+import { X, Cpu, Zap, Compass, Activity, Layers, GraduationCap, ArrowRight, Sparkles, BookOpen } from './Icons';
 import { LatexMath, MathText } from './LatexMath';
 
 export type PhysicsTopicId =
@@ -12,11 +12,312 @@ export type PhysicsTopicId =
   | 'regen_braking'
   | 'clarke_park';
 
-interface PhysicsTopic {
+export type GuideModalTab = 'ladder' | 'topics';
+
+export interface KnowledgeLadderStep {
+  stepNum: number;
+  badge: string;
+  title: string;
+  tagline: string;
+  highSchoolFoundation: {
+    textbookTopic: string;
+    corePrinciples: string[];
+    formulaLatex: string;
+    formulaDesc: string;
+    intuition: string;
+  };
+  engineeringBridge: {
+    bridgeTitle: string;
+    coreInsight: string;
+    formulaLatex: string;
+    formulaDesc: string;
+    breakdownPoints: { title: string; desc: string }[];
+  };
+  analogy: {
+    title: string;
+    body: string;
+  };
+  faq: {
+    question: string;
+    answer: string;
+  };
+  linkedTopicId: PhysicsTopicId;
+  demoPreset: {
+    label: string;
+    stateUpdates: Partial<SimulationState>;
+    cameraPreset?: string;
+  };
+}
+
+export const KNOWLEDGE_LADDER_STEPS: KnowledgeLadderStep[] = [
+  {
+    stepNum: 1,
+    badge: '台阶 1 · 安培力到定子槽',
+    title: '从“通电导线受力 (F=BIL)”到“电动机转动”',
+    tagline: '单根悬空导线的微弱安培力，如何通过 48 槽定子铁芯与发卡扁线合成在空间中飞速旋转的磁动势？',
+    highSchoolFoundation: {
+      textbookTopic: '高中物理选修 3-1 第四章《磁场》· 洛伦兹力、安培力定律与左手定则',
+      corePrinciples: [
+        '微观洛伦兹力：磁场对运动电荷施加洛伦兹力 $f = qvB\\sin\\theta$，方向垂直于电荷运动方向与磁场方向。',
+        '宏观安培力定律：通电直导线中亿万定向移动电子所受洛伦兹力的集体宏观表现，即为安培力 $F = BIL\\sin\\theta$。',
+        '左手定则：伸开左手，使大拇指与四指垂直并在同一平面内。磁感线穿入手心，四指指向电流方向，大拇指所指即为安培力方向。',
+        '旋转力矩萌芽：若将导线绕成闭合矩形线圈置于匀强磁场中，左右两边电流相反，安培力反向，构成旋转力偶矩 $M = F \\cdot d = B I S$。'
+      ],
+      formulaLatex: 'F = B I L \\sin\\theta \\quad , \\quad M = B I S \\cos\\alpha',
+      formulaDesc: '其中 $B$ 为磁感应强度，$I$ 为导线电流，$L$ 为导线有效长度；$S$ 为矩形线圈面积，$M$ 为电磁力矩。',
+      intuition: '高中物理模型假设磁场是外界给定的恒定匀强磁场，导线孤零零放在空气中。单线圈转过 90° 后力矩就会归零甚至反向，必须靠初中学的机械电刷换向器倒换电流才能勉强转起来。'
+    },
+    engineeringBridge: {
+      bridgeTitle: '现代纯电动车电机的工程进化：48槽高导磁定子铁芯与发卡扁线',
+      coreInsight: '为什么纯电汽车不能像高中实验室那样只放几匝悬空铜线？空气磁阻极大，必须用硅钢片引导并汇聚磁场！',
+      formulaLatex: '\\vec{F}_s(t) = \\sum_{k=1}^{48} \\vec{f}_{\\text{slot}, k}(t) = \\frac{3}{2} N_{\\text{phase}} I_m \\cdot e^{j(\\omega_e t + \\delta)}',
+      formulaDesc: '48 槽定子发卡扁线通入对称三相电流后，槽内安培力在 0.8mm 极窄气隙中无缝拼接，合成出一个宏观平滑旋转的定子磁动势矢量 $\\vec{F}_s$。',
+      breakdownPoints: [
+        {
+          title: '48 个定子齿槽 (Stator Slots) 的磁聚焦功能',
+          desc: '空气的导磁率极低（$\\mu_0 = 4\\pi \\times 10^{-7}\\text{ H/m}$），磁感线极易发散。现代电机用 0.25mm 极薄硅钢片（$\\mu_r > 4000$）叠压成定子铁芯，并精密切割出 48 个齿槽，把磁场像高压水枪一样聚焦喷向仅有 0.8mm 的极窄气隙，磁场强度被放大数千倍！'
+        },
+        {
+          title: '8层发卡式扁线 (Hairpin Flat-Wire) 革命',
+          desc: '传统电机用乱绕细圆铜线，线间空隙充满空气，槽满率仅 45%；本项目采用矩形截面无氧纯铜扁线，像积木一样紧密嵌满 8 层，槽满率跃升至 75% 以上！导线电阻 $R_s$ 骤降 30%，产生数倍于传统电机的澎湃安培力。'
+        },
+        {
+          title: '从单线圈力矩到连续旋转磁动势矢量 $\\vec{F}_s$',
+          desc: '48 个槽内的导线不是孤立的，而是按照空间拓扑严格分配给 U、V、W 三相。当三相正弦电流注入时，48 个槽产生的微观安培力在气隙圆周无缝拼接，合成出一个幅值恒定、连续旋转的宏观黄色磁矢 $\\vec{F}_s$！'
+        }
+      ]
+    },
+    analogy: {
+      title: '生活通俗类比：从一根筷子划水，到 48 人龙舟方阵与高压聚能水枪',
+      body: '高中物理实验就像拿一根筷子在开阔的游泳池里划水，水花四溅但推力微弱；而现代 EV 电机则是 48 个人坐在同一艘流线型龙舟里（48槽定子），握着极粗的矩形船桨（8层发卡扁线），在两岸高导磁硅钢片构成的狭窄聚流峡谷（0.8mm 气隙）中，整齐划一地合力划桨，把散乱的水流汇聚成一道势不可挡的强劲旋转激流！'
+    },
+    faq: {
+      question: '高中生常见疑问：几十牛·米甚至上百牛·米的巨大扭矩，会不会把脆弱的绝缘漆包铜线直接剪断撕裂？',
+      answer: '这是电机工程中最惊艳的物理事实之一！绝大部分人以为安培力是直接拉扯铜线，其实不然：因为硅钢片的导磁率是空气和铜的数千倍，磁感线绝大部分都会拐弯钻进定子齿部（Teeth）中，槽内铜线处的磁场反而很弱。真实的切向电磁推力有 90% 以上直接作用在极其结实的定子硅钢片齿靴上，铁芯替铜线承受了绝大部分机械撕扯力！铜线只需要安心导电即可。'
+    },
+    linkedTopicId: '8p48s',
+    demoPreset: {
+      label: '观察发卡扁线端部结构与电流粒子流',
+      stateUpdates: { rpm: 20, loadAngle: 48, showParticles: true, showVectors: true, cutawayEnabled: true },
+      cameraPreset: 'hairpin_end'
+    }
+  },
+  {
+    stepNum: 2,
+    badge: '台阶 2 · 旋转磁场与极对数',
+    title: '从“单相交流电”到“旋转磁场”与“极对数 (p=4)”',
+    tagline: '时间相差 120° 的三相对称电流，如何在空间中像齿轮咬合一样推动转子？为什么机械转一圈电场交变 4 圈？',
+    highSchoolFoundation: {
+      textbookTopic: '高中物理选修 3-2 第五章《交变电流》· 正弦交流电、相位差与三相电源',
+      corePrinciples: [
+        '正弦交流电三要素：幅值 $I_m$、角频率 $\\omega$、初相位 $\\phi$。高中单相交变电流 $i(t) = I_m \\sin(\\omega t)$ 随时间周期性反向振荡。',
+        '三相交流电概念：由三个频率相同、振幅相等、但在时间相位上互差 $120^\\circ$（$\\frac{2\\pi}{3}$）的正弦交流电组成：$i_u = I_m \\cos(\\omega t)$、$i_v = I_m \\cos(\\omega t - \\frac{2\\pi}{3})$、$i_w = I_m \\cos(\\omega t + \\frac{2\\pi}{3})$。',
+        '瞬时平衡性：三相对称交流电在任意瞬时的代数和恒为零：$i_u(t) + i_v(t) + i_w(t) = 0$。'
+      ],
+      formulaLatex: 'i_u(t) + i_v(t) + i_w(t) = 0 \\quad , \\quad \\Delta\\phi = \\frac{2\\pi}{3} = 120^\\circ',
+      formulaDesc: '三相电流互差 1/3 个周期（120° 电角度），在时间上形成轮流达到峰值的完美节拍。',
+      intuition: '很多同学不理解：单相交流电接上线圈只能在原地产生忽强忽弱、忽上忽下的“脉振磁场”，就像单手拍球原地上下跳，根本无法让电机旋转（转子不知该顺时针还是逆时针转）。三相电凭什么能“转”起来？'
+    },
+    engineeringBridge: {
+      bridgeTitle: '时间差与空间差的奇妙交织：圆形旋转磁场的空间合成与极对数',
+      coreInsight: '空间物理上互差 120° 的三个绕组 + 时间上互差 120° 的三相电流 = 匀速旋转的磁场！',
+      formulaLatex: '\\vec{B}_{\\text{total}}(\\theta, t) = B_u + B_v + B_w = \\frac{3}{2} B_m \\left[ \\cos(\\omega_e t) \\hat{x} + \\sin(\\omega_e t) \\hat{y} \\right]',
+      formulaDesc: '利用高中三角函数和差化积展开：三相脉振磁场在空间和时间上完美叠加，多余的反向分量彼此抵消，最终合成为一个幅值恒定为 $\\frac{3}{2} B_m$、以角速度 $\\omega_e$ 匀速旋转的圆形矢量！',
+      breakdownPoints: [
+        {
+          title: '时间 120° 与空间 120° 的接力推背',
+          desc: '定子 U、V、W 三相在圆周物理空间上各占 120° 角度。当 U 相电流达正峰值时，定子顶部磁场最强；1/3 周期后 V 相电流达峰值，最强磁场顺滑平移到 120° 位置；再过 1/3 周期 W 相接力。三个线圈在时间与空间上交相呼应，如同三人轮流推磨！'
+        },
+        {
+          title: '极对数 $p=4$（8极）的本质：机械角 vs 电角度',
+          desc: '转子圆周上并不是只有一对 N-S 极，而是均匀分布着 8 个磁极（4 对 N-S 极，$p=4$）。这就意味着，转子在空间机械上只转了 1/4 圈（$\\theta_m = 90^\\circ$ 机械角），定子线圈就已经完整经历了一整轮 N 极到 S 极的电磁周期（$\\theta_e = 360^\\circ$ 电角度）！'
+        },
+        {
+          title: '公式映射：$\\theta_e = p \\cdot \\theta_m = 4\\theta_m$',
+          desc: '这就是为什么示波器和控制算法中的电角度频率 $f_e = \\frac{p \\cdot n}{60}$ 是机械转速频率的 4 倍！在 3D 电磁矢量图里直交的 $90^\\circ$ 电角度，投射到转子真实横截面上只有 $\\frac{90^\\circ}{4} = 22.5^\\circ$ 机械夹角。'
+        }
+      ]
+    },
+    analogy: {
+      title: '生活通俗类比：三人轮流推旋转木马与齿轮啮合',
+      body: '想象三个好朋友（U、V、W）站在圆形木马周围：第一个人推一把，第二个人紧接着在下个弧度接力推一把，第三个人在再下个位置推一把……木马就被源源不断地推着匀速旋转起来！而转子的 8 极结构就像一个小齿轮在里面严丝合缝地咬合，定子电场每转过 4 圈电周期，转子机械转轴才转动一整圈，齿比恰好是 4:1。'
+    },
+    faq: {
+      question: '高中生常见疑问：为什么电机不设计成最简单的 2 极（$p=1$），反而要做成复杂的 8 极（$p=4$）？',
+      answer: '极对数 $p$ 越多，在相同的电机外径下，每个磁极的跨度越短，定子背部所需的硅钢片磁轭厚度就可以做得更薄，铜线端部跨度大幅缩短，电机的总重量和体积大幅降低，功率密度成倍暴涨！现代电动车（如特斯拉 Model 3/Y、比亚迪汉 EV）无一例外采用 6 极或 8 极高密度拓扑。'
+    },
+    linkedTopicId: '8p48s',
+    demoPreset: {
+      label: '慢速观察旋转磁场与 22.5° 机械空间夹角',
+      stateUpdates: { rpm: 15, loadAngle: 48, showVectors: true, showFluxLines: true, cutawayEnabled: true },
+      cameraPreset: 'airgap_vectors'
+    }
+  },
+  {
+    stepNum: 3,
+    badge: '台阶 3 · 永磁转矩与转矩角',
+    title: '永磁同步电机（PMSM）与“转矩角 (δ)”的本质',
+    tagline: '同名磁极相斥、异名磁极相吸的微观本质：定子磁场为什么像奔跑的胡萝卜一样拽着转子跑？',
+    highSchoolFoundation: {
+      textbookTopic: '高中物理选修 3-1 第一/四章 · 磁极相互作用与磁矩取向',
+      corePrinciples: [
+        '磁极相互作用：自然界中磁单极子不存在，N 极与 S 极永远成对出现；同名磁极相斥，异名磁极相吸。',
+        '磁针在磁场中的自发对齐：把一枚自由旋转的小磁针放在外磁场中，小磁针必然顺着外磁场的磁感线方向对齐。',
+        '磁力偶矩与偏角：若外力将小磁针扭偏一个角度 $\\theta$，外磁场就会产生一个使其恢复对齐的磁力矩 $M = p_m B \\sin\\theta$；$\\theta=0^\\circ$ 时势能最低最稳定。'
+      ],
+      formulaLatex: 'M = p_m \\cdot B \\sin\\theta \\quad , \\quad E_p = -\\vec{p}_m \\cdot \\vec{B} = -p_m B \\cos\\theta',
+      formulaDesc: '$p_m$ 为小磁针的磁偶极矩，$B$ 为外磁场强度，$\\theta$ 为小磁针与外磁场的偏角；偏离越大，回正扭矩越大。',
+      intuition: '在高中我们知道磁铁被拉偏后想转回来。那么在现代电动车里，到底谁是外磁场，谁是小磁针？二者怎样保持同速旋转？'
+    },
+    engineeringBridge: {
+      bridgeTitle: '同步电机的本质：转子小磁针死死咬住定子奔跑磁场',
+      coreInsight: '转子永磁体 = 强力小磁针；定子旋转磁动势 $\\vec{F}_s$ = 奔跑的引力源。',
+      formulaLatex: 'T_{\\text{pm}}(\\delta) = \\frac{3}{2} p \\psi_{\\text{pm}} I_m \\sin\\delta \\quad (\\text{在 } \\delta = 90^\\circ \\text{ 处达峰})',
+      formulaDesc: '$\\psi_{\\text{pm}}$ 为转子钕铁硼永磁体主磁链，$I_m$ 为定子电流幅值，$\\delta$ 为定子磁场 $\\vec{F}_s$ 超前于转子磁针 $\\vec{F}_r$ 的负载转矩角。',
+      breakdownPoints: [
+        {
+          title: '什么是“同步”（Synchronous）？',
+          desc: '定子三相电流合成的旋转磁场 $\\vec{F}_s$ 以转速 $n = \\frac{60 f_e}{p}$ 在前面旋转；转子上的强力永磁铁被牢牢吸引，以分毫不差的相同转速跟着旋转，两者之间没有异步电机的转差率（Slip），故称“永磁同步电机”。'
+        },
+        {
+          title: '负载角 $\\delta$：像拉伸一根强力橡胶弹簧',
+          desc: '空载运转时，定子磁场与转子磁针完全重合（$\\delta = 0^\\circ$），磁感线笔直穿过气隙，只有径向压力而没有切向转矩；当踩下油门提速时，车轮阻力将转子拉后，定子磁场超前于转子一个角度 $\\delta$。气隙中的磁感线被严重拉长倾斜，如同被拉紧的橡胶弹簧，爆发强劲的切向拉力！'
+        },
+        {
+          title: '为什么不能无限拉大 $\\delta$？',
+          desc: '永磁转矩正比于 $\\sin\\delta$。当 $\\delta = 90^\\circ$ 时弹簧拉力达到峰值；如果外部负载过重，迫使 $\\delta > 90^\\circ$，$\\sin\\delta$ 下降，弹簧瞬间崩断，电机就会剧烈震颤甚至彻底失速（失步故障）。'
+        }
+      ]
+    },
+    analogy: {
+      title: '生活通俗类比：奔跑的胡萝卜与小毛驴，拉伸的强力弹簧绳',
+      body: '定子旋转磁场就像骑手拿竹竿吊在毛驴（转子）鼻尖前面的胡萝卜，以特定速度往前跑；毛驴为了吃到胡萝卜拼命往前追。胡萝卜和毛驴之间的距离就是转矩角 $\\delta$！车上坐的人越多（负载越大），毛驴离胡萝卜就稍微拉开一点距离（$\\delta$ 增大），拉车力矩就越大。'
+    },
+    faq: {
+      question: '既然 $\\sin(90^\\circ)=1$ 永磁拉力最大，为什么纯电动车最佳效率点不在 $90^\\circ$ 而是 $+48^\\circ$？',
+      answer: '因为这台电机是内置式（IPMSM）！除了永磁体的吸力之外，它的转子铁芯还藏着一个更神奇、完全不消耗永磁体的“第二扭矩引擎”——凸极磁阻转矩！请看下一个台阶的精彩揭秘！'
+    },
+    linkedTopicId: 'load_angle_mtpa',
+    demoPreset: {
+      label: '进入 3D 气隙观察黄红矢量夹角 $\\delta$',
+      stateUpdates: { rpm: 600, loadAngle: 48, showVectors: true, phaseCurrentMagnitude: 280, operatingMode: 'motoring' },
+      cameraPreset: 'airgap_vectors'
+    }
+  },
+  {
+    stepNum: 4,
+    badge: '台阶 4 · 磁阻最小与免费转矩',
+    title: '内置式（IPMSM）独有的“磁阻转矩 (T_rel)”（高中磁介质延伸）',
+    tagline: '大自然的本能：磁感线永远想走磁阻最小的路！V型转子如何靠几何结构“白嫖” 35%~45% 的强劲动力？',
+    highSchoolFoundation: {
+      textbookTopic: '高中物理选修 3-1 第四章 · 磁介质与磁化现象，能量最低原理',
+      corePrinciples: [
+        '铁磁性物质的磁化：铁、钴、镍等铁磁性物质具有极高的相对磁导率（$\\mu_r > 4000$）。在外磁场作用下，铁棒内部磁畴转向，产生强大的感应磁场，被磁铁紧紧吸住。',
+        '磁阻概念与能量最小原理：磁通穿透介质受到的阻碍称为磁阻 $R_m = \\frac{l}{\\mu S}$。物理系统永远自发演化向势能最低、总磁阻最小的状态。',
+        '趋利避害的磁感线：磁感线极度讨厌空气（$\\mu_0$ 小、磁阻极大），极度喜欢钻进高导磁硅钢片中（$\\mu_r$ 大、磁阻极小）。'
+      ],
+      formulaLatex: 'R_m = \\frac{l}{\\mu A} \\quad , \\quad W_m = \\frac{1}{2} L I^2 = \\frac{1}{2} \\frac{\\Phi^2}{R_m}',
+      formulaDesc: '$l$ 为磁路长度，$A$ 为截面积，$\\mu$ 为磁导率；磁阻越小，磁场储存能量与系统稳定性越高。',
+      intuition: '如果把一根没有任何永磁性的普通软铁棒斜着扔进磁场中，铁棒会不会转动？会！它会拼命扭正，直到把自己最长、最容易导磁的轴向对齐到磁力线上，以减小整个回路的总磁阻！'
+    },
+    engineeringBridge: {
+      bridgeTitle: '工程神作：为什么新能源车要把磁铁做成“V 字型”埋在铁芯内部？',
+      coreInsight: '利用硅钢片与永磁体的导磁率巨大差异，制造“逆凸极效应” $L_q > L_d$。',
+      formulaLatex: 'T_{\\text{total}}(\\delta) = \\underbrace{\\frac{3}{2} p \\psi_{\\text{pm}} I_m \\sin\\delta}_{T_{\\text{pm}} (\\delta=90^\\circ \\text{达峰})} + \\underbrace{\\frac{3}{4} p (L_q - L_d) I_m^2 \\sin(2\\delta)}_{T_{\\text{rel}} (\\delta=45^\\circ \\text{达峰})}',
+      formulaDesc: '$L_d = 0.38\\text{ mH}$（直轴电感），$L_q = 0.92\\text{ mH}$（交轴电感），逆凸极比 $\\rho = \\frac{L_q}{L_d} \\approx 2.42$；二倍角 $\\sin(2\\delta)$ 产生磁阻转矩。',
+      breakdownPoints: [
+        {
+          title: '惊人事实：强磁铁本身居然是“导磁绝缘体”！',
+          desc: '烧结钕铁硼永磁体虽然自带强磁性，但对外界交变磁通而言，其回复磁导率极低（$\\mu_r \\approx 1.05$），导磁性能几乎和空气一模一样！因此，直接穿过磁铁的直轴（$d$ 轴）相当于穿过了厚厚的外加空气层，磁阻极大，电感很小（$L_d = 0.38\\text{ mH}$）。'
+        },
+        {
+          title: '交轴（$q$ 轴）的高速公路与逆凸极效应',
+          desc: '而在两块 V 型磁铁之间的铁芯区域（$q$ 轴），全由高导磁冷轧硅钢片（$\\mu_r > 4000$）铺就，是一条畅通无阻的磁通高速公路，磁阻极小，电感极大（$L_q = 0.92\\text{ mH}$）！交轴导磁能力是直轴的 2.42 倍！'
+        },
+        {
+          title: 'MTPA 最大转矩电流比的最佳夹角（+48°）',
+          desc: '永磁转矩按 $\\sin\\delta$ 变化（$90^\\circ$ 达峰）；磁阻转矩按二倍角 $\\sin(2\\delta)$ 变化（$45^\\circ$ 达峰）。将两股力量叠加在一起，总转矩的最大峰值恰好出现在 $\\delta \\approx 48^\\circ \\sim 52^\\circ$！在这个角度下，同样灌入 200A 电流，能多榨出 35%~45% 的纯结构免费扭矩！'
+        }
+      ]
+    },
+    analogy: {
+      title: '生活通俗类比：铁棒自发顺水流对齐，白嫖大自然的几何红利',
+      body: '想象在湍急的水流中斜放一根扁铁板，水流会产生巨大的扭矩将铁板顺着水流冲平——转子铁芯为了让磁感线走得最顺畅，自发爆发出的这股纯几何扭力就是磁阻转矩！电车工程师不用花额外一分钱买稀土磁铁，单靠在转子上巧夺天工地挖出 V 型槽，就白嫖了将近一半的总动力！'
+    },
+    faq: {
+      question: '既然磁阻转矩这么香，为什么不干脆把磁铁全扔掉，做成纯开关磁阻电机？',
+      answer: '纯磁阻电机没有永磁体提供基础偏置磁通，启动时转矩脉动大、电磁啸叫（NVH 噪音）极其刺耳，且低速扭矩不足。IPMSM 的绝妙之处正是将“温润强劲的永磁转矩”与“爆发力极高的磁阻转矩”完美融于一体，刚柔并济。'
+    },
+    linkedTopicId: 'reluctance_torque',
+    demoPreset: {
+      label: '观察 V 型转子隔磁槽与双转矩合成曲线',
+      stateUpdates: { rpm: 600, loadAngle: 50, fluxWeakeningCurrent: 0, phaseCurrentMagnitude: 320, operatingMode: 'motoring', cutawayEnabled: true },
+      cameraPreset: 'v_rotor_flux'
+    }
+  },
+  {
+    stepNum: 5,
+    badge: '台阶 5 · 坐标变换与弱磁',
+    title: '高级控制基石——Clarke/Park 坐标变换与弱磁（Flux Weakening）',
+    tagline: '如何把疯狂旋转的交流电化繁为简变成两个直流分量？转速超 4500 RPM 后为什么要主动“削磁”保命？',
+    highSchoolFoundation: {
+      textbookTopic: '高中物理必修一《力的合成与分解》+ 选修3-2《动生电动势》与闭合电路欧姆定律',
+      corePrinciples: [
+        '矢量的正交分解思想：平面上的任何倾斜矢量都可以分解为沿 $x$ 轴与 $y$ 轴的两个正交投影分量。两分量互相垂直、互不干涉，可以独立研究和控制。',
+        '动生反电动势定律：导线在磁场中运动时产生动生电动势 $E = BLv$；线圈在交变磁场中感应出反电动势 $e = -N \\frac{\\Delta\\Phi}{\\Delta t}$。速度越快，感应反电压越高！',
+        '电路闭合极限：电源输出端电压有上限（如动力电池母线电压 $U_{\\text{dc}}$）。当电机的反电动势逼近甚至超过母线电压时，外部电流再也无法注入，且过高反压会击穿逆变器半导体功率芯片。'
+      ],
+      formulaLatex: 'E_0 = \\omega_e \\psi_{\\text{pm}} = \\frac{2\\pi p n}{60} \\psi_{\\text{pm}} \\quad , \\quad U_{\\max} = \\frac{U_{\\text{dc}}}{\\sqrt{3}}',
+      formulaDesc: '反电动势 $E_0$ 随转速 $n$ 线性暴涨；$U_{\\max}$ 为逆变器能输出的最大相电压幅值极限。',
+      intuition: '三相交流电每秒钟正弦振荡上千次，控制器直接算正弦波根本来不及。高一学的相对运动与正交分解，在现代电车中是如何大显神通的？'
+    },
+    engineeringBridge: {
+      bridgeTitle: 'FOC 磁场定向控制与负 $d$ 轴弱磁救险',
+      coreInsight: '跳上旋转木马（Park 变换）将交流变直流；注入负直轴电流 $I_d < 0$ 强行去磁防击穿。',
+      formulaLatex: '\\begin{bmatrix} I_d \\\\ I_q \\end{bmatrix} = \\mathbf{P}(\\theta_e) \\mathbf{C} \\begin{bmatrix} I_u \\\\ I_v \\\\ I_w \\end{bmatrix} \\quad , \\quad \\psi_d = \\psi_{\\text{pm}} + L_d I_d \\quad (I_d < 0 \\implies \\psi_d < \\psi_{\\text{pm}})',
+      formulaDesc: '$I_d$（直轴电流，沿磁铁方向负责削磁增磁），$I_q$（交轴电流，垂直磁铁方向负责做功推车）；$I_d < 0$ 抵消部分永磁磁通。',
+      breakdownPoints: [
+        {
+          title: 'Clarke & Park 变换：从地面看 vs 跳上旋转木马',
+          desc: '站在地面上看旋转木马上的三个人（$I_u, I_v, I_w$），他们在飞速旋转；但如果你也跳上旋转木马和转子一起转动（Park 变换乘以旋转角 $\\theta_e$），在你的眼里，这两个分量（$I_d, I_q$）就变成了纹丝不动的纯直流量！复杂的交流电机控制瞬间降维成了初中直流电机一样简单！'
+        },
+        {
+          title: '4500 RPM 基速危机：反电动势顶到电池天花板',
+          desc: '当电车在高速公路上极速飞驰时，转速突破 4500 RPM。强磁铁飞速切割线圈，产生的反电动势 $E_0 = \\omega_e \\psi_{\\text{pm}}$ 达到几百甚至上千伏，死死顶住动力电池的供电电压。如果不做处理，逆变器将被倒灌过压击穿！'
+        },
+        {
+          title: '弱磁扩速（Flux Weakening）：以毒攻毒的“反向去磁”',
+          desc: '永磁体固定在转子里没法拆，但我们可以主动向定子灌入负的直轴电流（$I_d = -110\\text{ A}$）！这股负电流产生一个与永磁体恰好相反的反向磁场，类似电磁铁反接去磁，强行把总磁链压低（$\\psi_d = \\psi_{\\text{pm}} + L_d I_d$），反电动势应声回落，电车得以安全突破 12000+ RPM 极限极速！'
+        }
+      ]
+    },
+    analogy: {
+      title: '生活通俗类比：旋转木马上的相对静止，高压锅上的安全泄压阀',
+      body: 'Park 变换就是让你坐进转子的主驾驶室，一切高频变动的混乱交流电立刻变得风平浪静；而弱磁控制就像高压锅顶部的安全泄压阀：锅内转速气压越狂暴，泄压阀放出的负电流气体就越多，巧妙化解粉身碎骨的炸锅危机，让电车在极速下依然稳健如初！'
+    },
+    faq: {
+      question: '负电流 $I_d < 0$ 会把永磁体的磁性彻底搞丢（不可逆退磁）吗？',
+      answer: '这正是电机工程师最关心的问题！现代车规级钕铁硼磁铁掺入了镝（Dy）、铽（Tb）等稀土重元素，拥有极其坚韧的内禀矫顽力（$H_{cj} \\ge 25\\text{ kOe}$）。在设计弱磁控制时，工程师会严格计算安全退磁极限线，只要温度不超过 180°C 且去磁电流在阈值内，断电后永磁体会 100% 恢复原有磁性，毫发无损！'
+    },
+    linkedTopicId: 'dq_decoupling',
+    demoPreset: {
+      label: '切入 12000 RPM 弱磁工况 (Id = -110A)',
+      stateUpdates: { rpm: 12000, loadAngle: 65, fluxWeakeningCurrent: -110, phaseCurrentMagnitude: 300, operatingMode: 'motoring', showVectors: true },
+      cameraPreset: 'flux_weakening'
+    }
+  }
+];
+
+export interface PhysicsTopic {
   id: PhysicsTopicId;
   badge: string;
   title: string;
   subtitle: string;
+  highSchoolAnchor: {
+    topic: string;
+    principle: string;
+    bridgeInsight: string;
+  };
   formulaLatex: string;
   secondaryFormulaLatex?: string;
   formulaDesc: string;
@@ -35,6 +336,11 @@ export const PHYSICS_TOPICS: PhysicsTopic[] = [
     badge: '极槽拓扑 & 电角度',
     title: '8极48槽 (8P48S) 拓扑与电角度/空间角映射',
     subtitle: '为什么 $90^\\circ$ 电角度在 3D 空间里只对应 $22.5^\\circ$ 机械夹角？',
+    highSchoolAnchor: {
+      topic: '高中物理选修 3-1 安培力与空间定则 + 选修 3-2 交流电周期',
+      principle: '通电导线在匀强磁场中受安培力 $F=BIL$；线圈转动周期与交流电交变频率严格一一对应。',
+      bridgeInsight: '工程将单根导线升级为 48 槽定子铁芯与发卡扁线，8 极（4 对极）使得机械每转 1/4 圈，电气交变一个整周期（$\\theta_e = 4\\theta_m$），直角电角度对应 22.5° 机械几何角。'
+    },
     formulaLatex: '\\theta_e = p \\cdot \\theta_m = 4\\theta_m \\quad , \\quad f_e = \\frac{p \\cdot n}{60} \\quad , \\quad q = \\frac{Z}{2p \\cdot m} = \\frac{48}{8 \\times 3} = 2',
     formulaDesc: '其中 $p = 4$ 为极对数（$2p = 8$ 个永磁磁极）；$\\theta_e$ 为电角度，$\\theta_m$ 为空间机械角度，$Z=48$ 为定子槽数，$q=2$ 为每极每相槽数。',
     analogy: '直观理解：转子上有 $4$ 对 N-S 磁极交替排布。转子在三维空间里每转过 $1/4$ 圈（$\\theta_m = 90^\\circ$ 机械角），定子线圈就已经完整经历了一轮 N 极与 S 极的电磁交替（$\\theta_e = 360^\\circ$ 电角度）。',
@@ -63,6 +369,11 @@ export const PHYSICS_TOPICS: PhysicsTopic[] = [
     badge: '转速 & 基速分界',
     title: '基速 (Base Speed 4500 RPM) 与反电动势电压极限',
     subtitle: '为什么 $4500\\text{ RPM}$ 被标注为“基速”？恒转矩区与恒功率区是如何划分的？',
+    highSchoolAnchor: {
+      topic: '高中物理选修 3-2 法拉第电磁感应定律与反电动势',
+      principle: '动生电动势 $E = BLv$，转速越高感应电动势越大；闭合回路中外加电压必须大于反电动势才能注入电流。',
+      bridgeInsight: '在 4500 RPM 基速点，线圈反电动势 $E_0 = \\omega_e \\psi_{\\text{pm}}$ 达到逆变器直流母线电压上限 $\\frac{U_{\\text{dc}}}{\\sqrt{3}}$，成为恒转矩区与弱磁恒功率区的物理分水岭。'
+    },
     formulaLatex: 'U_s = \\sqrt{(R_s I_d - \\omega_e L_q I_q)^2 + \\bigl(R_s I_q + \\omega_e (\\psi_{\\text{pm}} + L_d I_d)\\bigr)^2} \\le \\frac{U_{\\text{dc}}}{\\sqrt{3}}',
     secondaryFormulaLatex: 'E_0 = \\omega_e \\psi_{\\text{pm}} = \\frac{2\\pi p \\cdot n}{60} \\psi_{\\text{pm}}',
     formulaDesc: '当转速 $n$（电角速度 $\\omega_e$）升高时，旋转磁链切割定子线圈产生的反电动势 $E_0 = \\omega_e \\psi_{\\text{pm}}$ 随转速线性暴涨，受限于电池逆变器最大相电压幅值 $\\frac{U_{\\text{dc}}}{\\sqrt{3}}$。',
@@ -91,6 +402,11 @@ export const PHYSICS_TOPICS: PhysicsTopic[] = [
     badge: '负载转矩角 δ & MTPA',
     title: '负载转矩角 (δ) 与 MTPA 最大转矩电流比 (+48°)',
     subtitle: '为什么电动车内置式永磁电机最佳效率点在 $+48^\\circ$ 左右，而不是 $+90^\\circ$？',
+    highSchoolAnchor: {
+      topic: '高中物理选修 3-1 磁极对齐力矩 + 必修一力学力的合成与极值',
+      principle: '小磁针顺磁感线方向对齐；合力的大小不仅取决于分力大小，还取决于两者的夹角与正弦变化关系。',
+      bridgeInsight: '定子旋转磁场超前于转子磁针的角度即为负载角 $\\delta$。由于 V 型转子同时具备永磁力（$\\sin\\delta$）与磁阻力（$\\sin 2\\delta$），合力在 $+48^\\circ$ 达峰（MTPA），用最少电费产出最大扭矩。'
+    },
     formulaLatex: 'T_{\\text{total}}(\\delta) = \\underbrace{\\frac{3}{2} p \\psi_{\\text{pm}} I_m \\sin\\delta}_{T_{\\text{pm}}\\text{ (永磁转矩)}} - \\underbrace{\\frac{3}{4} p (L_d - L_q) I_m^2 \\sin(2\\delta)}_{T_{\\text{rel}}\\text{ (凸极磁阻转矩, } L_d < L_q\\text{)}}',
     secondaryFormulaLatex: 'I_d = -I_m \\cos\\delta \\quad , \\quad I_q = I_m \\sin\\delta \\quad , \\quad \\left.\\frac{\\partial T_{\\text{total}}}{\\partial \\delta}\\right|_{\\delta = \\delta_{\\text{MTPA}}} = 0',
     formulaDesc: '第一项为永磁转矩 $T_{\\text{pm}}$（按 $\\sin\\delta$ 变化，$\\delta = 90^\\circ$ 达峰）；第二项为凸极磁阻转矩 $T_{\\text{rel}}$（按 $\\sin(2\\delta)$ 变化，$\\delta = 45^\\circ$ 达峰）。',
@@ -119,6 +435,11 @@ export const PHYSICS_TOPICS: PhysicsTopic[] = [
     badge: 'd-q 轴解耦 & 弱磁',
     title: 'd-q 轴正交解耦与弱磁扩速 (Id Weakening < 0)',
     subtitle: '什么是直轴 ($d$ 轴) 与交轴 ($q$ 轴)？注入负 $I_d$ 电流是如何给永磁体“削磁”的？',
+    highSchoolAnchor: {
+      topic: '高中物理必修一矢量的正交分解与相对运动',
+      principle: '倾斜矢量分解为水平和竖直两个独立正交分量；站在相对运动的旋转参考系中观察运动物体。',
+      bridgeInsight: '以转子旋转速度建立同步坐标系，将三相正交拆分为 $d$ 轴（沿磁极调磁通）与 $q$ 轴（垂直磁极推转子），并在高速下注入负 $I_d < 0$ 实施弱磁去磁。'
+    },
     formulaLatex: '\\psi_d = \\psi_{\\text{pm}} + L_d I_d \\quad (I_d < 0 \\implies \\psi_d < \\psi_{\\text{pm}}) \\quad , \\quad \\psi_q = L_q I_q',
     formulaDesc: '$d$ 轴（Direct Axis，直轴）锁定在转子永磁体 N 极中心线上；$q$ 轴（Quadrature Axis，交轴）超前 $d$ 轴 $90^\\circ$ 电角度。',
     analogy: '直观理解：FOC 把定子电流拆成两个互相垂直的分工小队——$d$ 轴电流 $I_d$ 专门负责“调节磁铁强弱”（沿着红色箭头 $\\vec{F}_r$ 方向），$q$ 轴电流 $I_q$ 专门负责“横向推转子做功”（沿着绿色箭头 $I_q$ 方向）。',
@@ -147,6 +468,11 @@ export const PHYSICS_TOPICS: PhysicsTopic[] = [
     badge: '双转矩分量 & 凸极效应',
     title: '永磁转矩 (T_pm) vs. 凸极磁阻转矩 (T_rel)',
     subtitle: '为什么转子磁铁要排成“V 字型”？什么是逆凸极效应 ($L_q > L_d$)？',
+    highSchoolAnchor: {
+      topic: '高中物理选修 3-1 铁磁介质磁化与能量最低原理',
+      principle: '铁磁材料易被磁化且磁导率极高；磁通优先走低磁阻路径，系统自发扭正以最小化总磁阻。',
+      bridgeInsight: '永磁体透磁率低如空气（$L_d = 0.38\\text{ mH}$），铁芯通道透磁率极高（$L_q = 0.92\\text{ mH}$），形成逆凸极比 $\\rho \\approx 2.42$，带来占总扭矩 35%~45% 的免费磁阻动力。'
+    },
     formulaLatex: 'T_e = \\frac{3}{2} p \\Bigl[ \\underbrace{\\psi_{\\text{pm}} I_q}_{\\text{永磁项}} + \\underbrace{(L_d - L_q) I_d I_q}_{\\text{凸极磁阻项}} \\Bigr] = T_{\\text{pm}} + T_{\\text{rel}}',
     secondaryFormulaLatex: 'L_d = 0.38\\text{ mH} < L_q = 0.92\\text{ mH} \\implies \\rho = \\frac{L_q}{L_d} \\approx 2.42 \\quad (\\text{逆凸极比})',
     formulaDesc: '本电机物理参数：极对数 $p=4$，永磁磁链 $\\psi_{\\text{pm}} = 0.082\\text{ Wb}$，直轴电感 $L_d = 0.38\\text{ mH}$，交轴电感 $L_q = 0.92\\text{ mH}$。',
@@ -176,6 +502,11 @@ export const PHYSICS_TOPICS: PhysicsTopic[] = [
     badge: '动能回收发电模式',
     title: '动能回收制动 (Regenerative Braking, δ < 0°)',
     subtitle: '松开电门或踩刹车时，电机是如何瞬间变成发电机给电池反向充电的？',
+    highSchoolAnchor: {
+      topic: '高中物理必修二机械能守恒定律 + 选修 3-2 发电机原理与楞次定律',
+      principle: '发电机把机械动能转化为电能；楞次定律表明感应电流的磁场总是阻碍引起感应的原运动（安培反推阻力）。',
+      bridgeInsight: '负载角转为负值（$\\delta < 0^\\circ$），定子磁场拖在转子后方施加安培阻力，车轮机械动能被反向转化为三相交流电灌回动力电池。'
+    },
     formulaLatex: '\\delta < 0^\\circ \\implies I_q < 0 \\implies T_e < 0\\text{ N}\\cdot\\text{m} \\implies P_{\\text{mech}} = T_e \\omega_m < 0\\text{ kW}',
     formulaDesc: '转子在车轮惯性带动下继续正向旋转（$\\omega_m > 0$），但定子合成磁场 $\\vec{F}_s$ 切换为滞后于转子 $d$ 轴 $\\vec{F}_r$（$\\delta < 0^\\circ$）。',
     analogy: '直观理解：电动牵引模式（$\\delta > 0^\\circ$）是定子磁场 $\\vec{F}_s$ 跑在前面“拽着”转子跑；动能回收模式（$\\delta < 0^\\circ$）则是车轮推着转子 $\\vec{F}_r$ 跑在前面，定子磁场 $\\vec{F}_s$ 在后面“往回拉”转子，把车辆的动能转化成三相电能充进动力电池！',
@@ -200,6 +531,11 @@ export const PHYSICS_TOPICS: PhysicsTopic[] = [
     badge: 'FOC 坐标变换核心',
     title: 'FOC 磁场定向控制：Clarke 与 Park 坐标变换',
     subtitle: '如何把高速交变的 U/V/W 三相正弦交流电，变成像直流电机一样温顺的 $I_d, I_q$？',
+    highSchoolAnchor: {
+      topic: '高中数学三角函数投影与和差化积 + 物理相对运动思想',
+      principle: '空间向量在不同坐标系下的基底变换与正交投影；以匀速转动的物体为参考系，转动物体相对静止。',
+      bridgeInsight: 'Clarke 变换将 3 轴（$120^\\circ$）降为 2 轴（$90^\\circ$），Park 变换乘以旋转矩阵消除时间交变项，将三相高频正弦波变为平稳直流量。'
+    },
     formulaLatex: '\\begin{bmatrix} I_d \\\\ I_q \\end{bmatrix} = \\underbrace{\\begin{bmatrix} \\cos\\theta_e & \\sin\\theta_e \\\\ -\\sin\\theta_e & \\cos\\theta_e \\end{bmatrix}}_{\\text{Park 旋转变换}} \\cdot \\underbrace{\\frac{2}{3} \\begin{bmatrix} 1 & -\\frac{1}{2} & -\\frac{1}{2} \\\\ 0 & \\frac{\\sqrt{3}}{2} & -\\frac{\\sqrt{3}}{2} \\end{bmatrix}}_{\\text{Clarke 等幅值变换}} \\begin{bmatrix} I_u \\\\ I_v \\\\ I_w \\end{bmatrix}',
     secondaryFormulaLatex: '\\begin{cases} I_u(t) = I_m \\cos(\\theta_e + \\phi) \\\\ I_v(t) = I_m \\cos(\\theta_e + \\phi - \\frac{2\\pi}{3}) \\\\ I_w(t) = I_m \\cos(\\theta_e + \\phi + \\frac{2\\pi}{3}) \\end{cases}',
     formulaDesc: 'Clarke 变换将互差 $120^\\circ$ 的三相静止轴系 $(u,v,w)$ 映射为正交两相静止轴系 $(\\alpha,\\beta)$；Park 变换将其旋转到随转子同步旋转的 $(d,q)$ 坐标系。',
@@ -228,6 +564,8 @@ export const PHYSICS_TOPICS: PhysicsTopic[] = [
 interface PhysicsGuideModalProps {
   isOpen: boolean;
   initialTopicId?: PhysicsTopicId;
+  initialTab?: GuideModalTab;
+  initialStepIndex?: number;
   onClose: () => void;
   onApplyDemo: (updates: Partial<SimulationState>, cameraPreset?: string) => void;
 }
@@ -235,16 +573,32 @@ interface PhysicsGuideModalProps {
 export const PhysicsGuideModal: React.FC<PhysicsGuideModalProps> = React.memo(({
   isOpen,
   initialTopicId = 'load_angle_mtpa',
+  initialTab = 'ladder',
+  initialStepIndex = 1,
   onClose,
   onApplyDemo
 }) => {
-  const [selectedId, setSelectedId] = React.useState<PhysicsTopicId>(initialTopicId);
+  const [activeTab, setActiveTab] = useState<GuideModalTab>(initialTab);
+  const [currentStepNum, setCurrentStepNum] = useState<number>(initialStepIndex);
+  const [selectedTopicId, setSelectedTopicId] = useState<PhysicsTopicId>(initialTopicId);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   useEffect(() => {
     if (initialTopicId) {
-      setSelectedId(initialTopicId);
+      setSelectedTopicId(initialTopicId);
     }
   }, [initialTopicId]);
+
+  useEffect(() => {
+    if (initialStepIndex) {
+      setCurrentStepNum(initialStepIndex);
+    }
+  }, [initialStepIndex]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -259,7 +613,8 @@ export const PhysicsGuideModal: React.FC<PhysicsGuideModalProps> = React.memo(({
 
   if (!isOpen) return null;
 
-  const activeTopic = PHYSICS_TOPICS.find(t => t.id === selectedId) || PHYSICS_TOPICS[0];
+  const currentStep = KNOWLEDGE_LADDER_STEPS.find(s => s.stepNum === currentStepNum) || KNOWLEDGE_LADDER_STEPS[0];
+  const activeTopic = PHYSICS_TOPICS.find(t => t.id === selectedTopicId) || PHYSICS_TOPICS[0];
 
   return (
     <div
@@ -268,157 +623,424 @@ export const PhysicsGuideModal: React.FC<PhysicsGuideModalProps> = React.memo(({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-4xl rounded-2xl border border-cyan-500/40 bg-[#0b101b] shadow-[0_0_40px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col max-h-[88vh]"
+        className="w-full max-w-5xl rounded-2xl border border-cyan-500/40 bg-[#0b101b] shadow-[0_0_50px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-800 bg-slate-950">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-cyan-950 border border-cyan-500/40 text-cyan-400">
-              <Compass size={18} />
+        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-800 bg-slate-950">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-950 to-indigo-950 border border-cyan-500/40 text-cyan-400">
+              <Compass size={19} />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-white font-mono tracking-wide flex items-center gap-2">
-                <span>IPMSM 电机物理与电磁控制原理全解</span>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30">
-                  LaTeX 公式与交互式教学百科
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold text-white font-mono tracking-wide flex items-center gap-2">
+                  <span>IPMSM 电磁物理与 FOC 控制保姆级科普</span>
+                </h2>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
+                  <GraduationCap size={12} />
+                  <span>高中物理知识平权体系</span>
                 </span>
-              </h2>
-              <p className="text-[11px] text-slate-400">
-                点击左侧核心物理概念词条（或按 ESC / 点击空白处关闭），深入理解面板参数背后的电磁方程与 FOC 控制机理
+              </div>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                从高中电磁感应、安培力与正弦交流电出发，通俗拆解 8极48槽 V型转子、逆凸极磁阻转矩与弱磁控制
               </p>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950 text-slate-300 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 transition-colors flex items-center gap-1 text-xs font-mono cursor-pointer"
-            title="关闭百科面板 (ESC)"
-          >
-            <span>关闭</span>
-            <X size={15} />
-          </button>
-        </div>
-
-        {/* Modal Body: Left Sidebar + Right Detail Content */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Left Topic Navigation */}
-          <div className="w-[260px] border-r border-slate-800 bg-slate-950/60 p-3 flex flex-col gap-1.5 overflow-y-auto">
-            <div className="text-[10px] font-mono text-slate-400 font-semibold uppercase px-1 pb-1">
-              核心物理与控制概念 (7)
-            </div>
-            {PHYSICS_TOPICS.map((topic, idx) => {
-              const isSelected = topic.id === selectedId;
-              return (
-                <button
-                  type="button"
-                  key={topic.id}
-                  onClick={() => setSelectedId(topic.id)}
-                  className={`text-left p-2.5 rounded-xl border transition-colors flex flex-col gap-1 cursor-pointer ${
-                    isSelected
-                      ? 'bg-cyan-950/90 border-cyan-400/70 shadow-[0_0_12px_rgba(0,242,254,0.18)]'
-                      : 'bg-slate-900/70 border-slate-800 hover:bg-slate-800 hover:border-slate-700'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-950 text-cyan-400 border border-cyan-500/25">
-                      0{idx + 1} · {topic.badge}
-                    </span>
-                  </div>
-                  <span className={`text-xs font-semibold leading-snug ${isSelected ? 'text-white' : 'text-slate-300'}`}>
-                    {topic.title}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Right Topic Details */}
-          <div className="flex-1 p-5 overflow-y-auto flex flex-col gap-4">
-            {/* Title & Subtitle */}
-            <div>
-              <div className="inline-flex items-center gap-1.5 text-[11px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 px-2.5 py-0.5 rounded-full mb-2">
-                <Zap size={12} />
-                <span>{activeTopic.badge}</span>
-              </div>
-              <h3 className="text-lg font-bold text-white leading-snug">
-                {activeTopic.title}
-              </h3>
-              <p className="text-xs text-amber-300/95 mt-1.5 font-medium">
-                💡 核心问题：<MathText text={activeTopic.subtitle} />
-              </p>
-            </div>
-
-            {/* Mathematical Formula Box (Rendered with KaTeX LaTeX) */}
-            <div className="p-3.5 rounded-xl bg-slate-950 border border-cyan-500/35 flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono text-cyan-400 uppercase font-bold">
-                  核心物理控制方程 (LATEX GOVERNING EQUATION)
-                </span>
-                <Cpu size={13} className="text-cyan-400" />
-              </div>
-              <div className="text-amber-300 bg-slate-900/95 px-4 py-2.5 rounded-lg border border-slate-800 flex flex-col gap-1 items-center justify-center">
-                <LatexMath block math={activeTopic.formulaLatex} className="text-sm" />
-                {activeTopic.secondaryFormulaLatex && (
-                  <div className="border-t border-slate-800/80 pt-1.5 w-full text-center text-cyan-200">
-                    <LatexMath block math={activeTopic.secondaryFormulaLatex} className="text-xs" />
-                  </div>
-                )}
-              </div>
-              <p className="text-[11px] text-slate-300 leading-relaxed">
-                <MathText text={activeTopic.formulaDesc} />
-              </p>
-            </div>
-
-            {/* Intuitive Physical Analogy */}
-            <div className="p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-xs text-emerald-100 leading-relaxed">
-              <strong className="text-emerald-400 font-bold">🎯 物理直觉类比：</strong>
-              <MathText text={activeTopic.analogy} />
-            </div>
-
-            {/* Detailed Breakdown Cards */}
-            <div className="flex flex-col gap-2.5">
-              <span className="text-[11px] font-mono font-bold text-slate-300 uppercase flex items-center gap-1.5">
-                <Layers size={13} className="text-cyan-400" />
-                <span>深度工程原理解析</span>
-              </span>
-              {activeTopic.keyPoints.map((pt, i) => (
-                <div
-                  key={i}
-                  className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col gap-1"
-                >
-                  <div className="text-xs font-bold text-cyan-300 flex items-center gap-2">
-                    <span className="w-4 h-4 rounded-full bg-cyan-950 border border-cyan-500/40 text-[10px] font-mono flex items-center justify-center text-cyan-300 shrink-0">
-                      {i + 1}
-                    </span>
-                    <MathText text={pt.label} />
-                  </div>
-                  <p className="text-xs text-slate-300 leading-relaxed pl-6">
-                    <MathText text={pt.detail} />
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {/* Interactive 3D Demo Trigger */}
-            <div className="mt-auto pt-3 flex items-center justify-between border-t border-slate-800">
-              <span className="text-[11px] text-slate-400">
-                想在 3D 实验室中直观观察这一物理现象？
-              </span>
+          <div className="flex items-center gap-3">
+            {/* View Mode Switcher Pills */}
+            <div className="flex items-center p-0.5 rounded-lg bg-slate-900 border border-slate-800">
               <button
                 type="button"
-                onClick={() => {
-                  onApplyDemo(activeTopic.demoPreset.stateUpdates, activeTopic.demoPreset.cameraPreset);
-                  onClose();
-                }}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-mono font-bold shadow-lg shadow-cyan-500/20 transition-all cursor-pointer"
+                onClick={() => setActiveTab('ladder')}
+                className={`px-3 py-1 rounded-md text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  activeTab === 'ladder'
+                    ? 'bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(0,242,254,0.35)]'
+                    : 'text-slate-400 hover:text-white'
+                }`}
               >
-                <Activity size={14} />
-                <span>⚡ {activeTopic.demoPreset.label}</span>
+                <GraduationCap size={13} />
+                <span>🎓 5步知识平权阶梯</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('topics')}
+                className={`px-3 py-1 rounded-md text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  activeTab === 'topics'
+                    ? 'bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(0,242,254,0.35)]'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <BookOpen size={13} />
+                <span>⚡ 7大工程深度专题</span>
               </button>
             </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950 text-slate-300 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 transition-colors flex items-center justify-center cursor-pointer"
+              title="关闭科普百科 (ESC)"
+            >
+              <X size={16} />
+            </button>
           </div>
         </div>
+
+        {/* ================= TAB 1: 5-STEP HIGH SCHOOL KNOWLEDGE LADDER ================= */}
+        {activeTab === 'ladder' && (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Top Step Selector Horizontal Rail */}
+            <div className="bg-slate-950/80 border-b border-slate-800/80 px-4 py-2 flex items-center gap-2 overflow-x-auto shrink-0">
+              <div className="text-[11px] font-mono text-cyan-400 font-bold uppercase shrink-0 flex items-center gap-1 mr-1">
+                <Sparkles size={13} />
+                <span>知识跃迁：</span>
+              </div>
+              {KNOWLEDGE_LADDER_STEPS.map((step) => {
+                const isActive = step.stepNum === currentStepNum;
+                return (
+                  <button
+                    key={step.stepNum}
+                    type="button"
+                    onClick={() => setCurrentStepNum(step.stepNum)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-mono transition-all shrink-0 cursor-pointer ${
+                      isActive
+                        ? 'bg-cyan-950 border-cyan-400 text-cyan-200 shadow-[0_0_12px_rgba(0,242,254,0.25)] font-bold'
+                        : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                    }`}
+                  >
+                    <span className={`w-5 h-5 rounded-full text-[11px] flex items-center justify-center font-bold ${
+                      isActive ? 'bg-cyan-400 text-slate-950' : 'bg-slate-800 text-slate-400'
+                    }`}>
+                      {step.stepNum}
+                    </span>
+                    <span>{step.badge.split('·')[1]?.trim() || step.badge}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Step Body (Scrollable) */}
+            <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
+              {/* Step Header Banner */}
+              <div className="flex flex-col gap-1 border-b border-slate-800/70 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-cyan-950 text-cyan-300 border border-cyan-500/30 font-bold">
+                    认知台阶 {currentStep.stepNum} / 5
+                  </span>
+                  <span className="text-xs text-slate-400 font-mono">
+                    {currentStep.badge}
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold text-white tracking-tight flex items-center gap-2 mt-1">
+                  <span>{currentStep.title}</span>
+                </h3>
+                <p className="text-xs text-amber-300/90 font-medium leading-relaxed">
+                  💡 核心突破：<MathText text={currentStep.tagline} />
+                </p>
+              </div>
+
+              {/* Two Column Grid: High School Physics vs Modern EV Engineering */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Left Card: High School Physics Foundation */}
+                <div className="p-4 rounded-xl bg-slate-950 border border-indigo-500/30 flex flex-col gap-3 shadow-md">
+                  <div className="flex items-center justify-between border-b border-indigo-500/20 pb-2">
+                    <span className="text-xs font-mono text-indigo-300 font-bold flex items-center gap-1.5 uppercase">
+                      <GraduationCap size={15} className="text-indigo-400" />
+                      <span>高中物理基础回顾</span>
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-950/80 text-indigo-300 border border-indigo-500/30">
+                      课本锚点
+                    </span>
+                  </div>
+
+                  <div className="text-[11px] text-indigo-200 bg-indigo-950/40 p-2.5 rounded-lg border border-indigo-500/20 leading-snug">
+                    📖 <strong>知识点出处：</strong><MathText text={currentStep.highSchoolFoundation.textbookTopic} />
+                  </div>
+
+                  {/* High School Formulas */}
+                  <div className="bg-slate-900/90 p-3 rounded-lg border border-slate-800 flex flex-col items-center justify-center text-center">
+                    <span className="text-[10px] font-mono text-slate-400 mb-1">高中课本经典公式</span>
+                    <LatexMath block math={currentStep.highSchoolFoundation.formulaLatex} className="text-sm text-indigo-300" />
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      <MathText text={currentStep.highSchoolFoundation.formulaDesc} />
+                    </p>
+                  </div>
+
+                  {/* Bullet points */}
+                  <div className="flex flex-col gap-2">
+                    {currentStep.highSchoolFoundation.corePrinciples.map((cp, idx) => (
+                      <div key={idx} className="text-xs text-slate-300 flex items-start gap-2 leading-relaxed">
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
+                        <span><MathText text={cp} /></span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-auto pt-2 border-t border-slate-800 text-[11px] text-slate-400 leading-relaxed italic">
+                    <MathText text={currentStep.highSchoolFoundation.intuition} />
+                  </div>
+                </div>
+
+                {/* Right Card: Modern EV Engineering Bridge */}
+                <div className="p-4 rounded-xl bg-slate-950 border border-cyan-500/40 flex flex-col gap-3 shadow-md">
+                  <div className="flex items-center justify-between border-b border-cyan-500/20 pb-2">
+                    <span className="text-xs font-mono text-cyan-300 font-bold flex items-center gap-1.5 uppercase">
+                      <Zap size={15} className="text-cyan-400" />
+                      <span>现代纯电车工程跃迁</span>
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-500/30">
+                      8P48S IPMSM
+                    </span>
+                  </div>
+
+                  <div className="text-[11px] text-cyan-200 bg-cyan-950/40 p-2.5 rounded-lg border border-cyan-500/20 leading-snug">
+                    🚀 <strong>工程突破目标：</strong><MathText text={currentStep.engineeringBridge.coreInsight} />
+                  </div>
+
+                  {/* Engineering Formula */}
+                  <div className="bg-slate-900/90 p-3 rounded-lg border border-slate-800 flex flex-col items-center justify-center text-center">
+                    <span className="text-[10px] font-mono text-cyan-400 mb-1">工程多物理场控制方程</span>
+                    <LatexMath block math={currentStep.engineeringBridge.formulaLatex} className="text-sm text-cyan-300" />
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      <MathText text={currentStep.engineeringBridge.formulaDesc} />
+                    </p>
+                  </div>
+
+                  {/* Engineering Breakdown points */}
+                  <div className="flex flex-col gap-2.5">
+                    {currentStep.engineeringBridge.breakdownPoints.map((bp, idx) => (
+                      <div key={idx} className="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800/80 flex flex-col gap-1">
+                        <div className="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
+                          <span className="w-4 h-4 rounded-full bg-cyan-950 text-[10px] font-mono flex items-center justify-center text-cyan-300 border border-cyan-500/30 shrink-0">
+                            {idx + 1}
+                          </span>
+                          <MathText text={bp.title} />
+                        </div>
+                        <p className="text-[11px] text-slate-300 leading-relaxed pl-5.5">
+                          <MathText text={bp.desc} />
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Intuitive Life Analogy (Green Box) */}
+              <div className="p-4 rounded-xl bg-emerald-950/25 border border-emerald-500/35 flex flex-col gap-1.5">
+                <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 font-mono">
+                  <Sparkles size={15} />
+                  <span>{currentStep.analogy.title}</span>
+                </div>
+                <p className="text-xs text-emerald-100 leading-relaxed">
+                  <MathText text={currentStep.analogy.body} />
+                </p>
+              </div>
+
+              {/* High School Engineering FAQ (Amber Box) */}
+              <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-500/30 flex flex-col gap-1.5">
+                <div className="text-xs font-bold text-amber-300 font-mono flex items-center gap-2">
+                  <span>❓ 高中生深度疑问：</span>
+                  <MathText text={currentStep.faq.question} />
+                </div>
+                <div className="text-xs text-amber-100/90 leading-relaxed pl-4 border-l-2 border-amber-500/50 mt-1">
+                  <strong>💡 工程揭秘：</strong>
+                  <MathText text={currentStep.faq.answer} />
+                </div>
+              </div>
+
+              {/* Step Navigation & 3D Interactive Action Bar */}
+              <div className="mt-2 pt-3 border-t border-slate-800 flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-2">
+                  {currentStepNum > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStepNum(currentStepNum - 1)}
+                      className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs font-mono transition-colors cursor-pointer"
+                    >
+                      ← 上一阶 (台阶 {currentStepNum - 1})
+                    </button>
+                  )}
+                  {currentStepNum < 5 && (
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStepNum(currentStepNum + 1)}
+                      className="px-3 py-1.5 rounded-lg bg-cyan-950 hover:bg-cyan-900 text-cyan-300 border border-cyan-500/40 text-xs font-mono transition-colors flex items-center gap-1 cursor-pointer font-bold"
+                    >
+                      <span>下一阶 (台阶 {currentStepNum + 1})</span>
+                      <ArrowRight size={13} />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedTopicId(currentStep.linkedTopicId);
+                      setActiveTab('topics');
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-indigo-300 border border-indigo-500/30 text-xs font-mono transition-colors flex items-center gap-1 cursor-pointer ml-1"
+                  >
+                    <BookOpen size={13} />
+                    <span>查看关联工程专题</span>
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    onApplyDemo(currentStep.demoPreset.stateUpdates, currentStep.demoPreset.cameraPreset);
+                    onClose();
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-mono font-bold shadow-lg shadow-cyan-500/25 transition-all cursor-pointer"
+                >
+                  <Activity size={14} />
+                  <span>⚡ 3D 实机体验：{currentStep.demoPreset.label}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ================= TAB 2: 7 IN-DEPTH ENGINEERING TOPICS ================= */}
+        {activeTab === 'topics' && (
+          <div className="flex-1 flex overflow-hidden">
+            {/* Left Topic Navigation */}
+            <div className="w-[260px] border-r border-slate-800 bg-slate-950/60 p-3 flex flex-col gap-1.5 overflow-y-auto shrink-0">
+              <div className="text-[10px] font-mono text-slate-400 font-semibold uppercase px-1 pb-1 flex items-center justify-between">
+                <span>核心工程专题 (7)</span>
+                <span className="text-[9px] text-cyan-400">LATEX 公式</span>
+              </div>
+              {PHYSICS_TOPICS.map((topic, idx) => {
+                const isSelected = topic.id === selectedTopicId;
+                return (
+                  <button
+                    type="button"
+                    key={topic.id}
+                    onClick={() => setSelectedTopicId(topic.id)}
+                    className={`text-left p-2.5 rounded-xl border transition-colors flex flex-col gap-1 cursor-pointer ${
+                      isSelected
+                        ? 'bg-cyan-950/90 border-cyan-400/70 shadow-[0_0_12px_rgba(0,242,254,0.18)]'
+                        : 'bg-slate-900/70 border-slate-800 hover:bg-slate-800 hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-950 text-cyan-400 border border-cyan-500/25">
+                        0{idx + 1} · {topic.badge}
+                      </span>
+                    </div>
+                    <span className={`text-xs font-semibold leading-snug ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                      {topic.title}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Right Topic Details */}
+            <div className="flex-1 p-5 overflow-y-auto flex flex-col gap-4">
+              {/* Title & Subtitle */}
+              <div>
+                <div className="inline-flex items-center gap-1.5 text-[11px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 px-2.5 py-0.5 rounded-full mb-2">
+                  <Zap size={12} />
+                  <span>{activeTopic.badge}</span>
+                </div>
+                <h3 className="text-lg font-bold text-white leading-snug">
+                  {activeTopic.title}
+                </h3>
+                <p className="text-xs text-amber-300/95 mt-1.5 font-medium">
+                  💡 核心问题：<MathText text={activeTopic.subtitle} />
+                </p>
+              </div>
+
+              {/* High School Physics Anchor Card */}
+              <div className="p-3.5 rounded-xl bg-indigo-950/30 border border-indigo-500/35 flex flex-col gap-1.5">
+                <div className="flex items-center justify-between text-xs font-mono font-bold text-indigo-300">
+                  <span className="flex items-center gap-1.5">
+                    <GraduationCap size={15} className="text-indigo-400" />
+                    <span>🎓 高中物理认知平权锚点</span>
+                  </span>
+                  <span className="text-[10px] text-indigo-400 font-mono">
+                    {activeTopic.highSchoolAnchor.topic}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  <strong>课本基础：</strong><MathText text={activeTopic.highSchoolAnchor.principle} />
+                </p>
+                <p className="text-xs text-indigo-200 leading-relaxed border-t border-indigo-500/20 pt-1.5">
+                  <strong>思维跃迁：</strong><MathText text={activeTopic.highSchoolAnchor.bridgeInsight} />
+                </p>
+              </div>
+
+              {/* Mathematical Formula Box (KaTeX) */}
+              <div className="p-3.5 rounded-xl bg-slate-950 border border-cyan-500/35 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono text-cyan-400 uppercase font-bold">
+                    核心物理控制方程 (LATEX GOVERNING EQUATION)
+                  </span>
+                  <Cpu size={13} className="text-cyan-400" />
+                </div>
+                <div className="text-amber-300 bg-slate-900/95 px-4 py-2.5 rounded-lg border border-slate-800 flex flex-col gap-1 items-center justify-center">
+                  <LatexMath block math={activeTopic.formulaLatex} className="text-sm" />
+                  {activeTopic.secondaryFormulaLatex && (
+                    <div className="border-t border-slate-800/80 pt-1.5 w-full text-center text-cyan-200">
+                      <LatexMath block math={activeTopic.secondaryFormulaLatex} className="text-xs" />
+                    </div>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  <MathText text={activeTopic.formulaDesc} />
+                </p>
+              </div>
+
+              {/* Intuitive Physical Analogy */}
+              <div className="p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-xs text-emerald-100 leading-relaxed">
+                <strong className="text-emerald-400 font-bold">🎯 物理直觉类比：</strong>
+                <MathText text={activeTopic.analogy} />
+              </div>
+
+              {/* Detailed Breakdown Cards */}
+              <div className="flex flex-col gap-2.5">
+                <span className="text-[11px] font-mono font-bold text-slate-300 uppercase flex items-center gap-1.5">
+                  <Layers size={13} className="text-cyan-400" />
+                  <span>深度工程原理解析</span>
+                </span>
+                {activeTopic.keyPoints.map((pt, i) => (
+                  <div
+                    key={i}
+                    className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col gap-1"
+                  >
+                    <div className="text-xs font-bold text-cyan-300 flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full bg-cyan-950 border border-cyan-500/40 text-[10px] font-mono flex items-center justify-center text-cyan-300 shrink-0">
+                        {i + 1}
+                      </span>
+                      <MathText text={pt.label} />
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed pl-6">
+                      <MathText text={pt.detail} />
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Interactive 3D Demo Trigger */}
+              <div className="mt-auto pt-3 flex items-center justify-between border-t border-slate-800">
+                <span className="text-[11px] text-slate-400">
+                  想在 3D 实验室中直观观察这一物理现象？
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onApplyDemo(activeTopic.demoPreset.stateUpdates, activeTopic.demoPreset.cameraPreset);
+                    onClose();
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-mono font-bold shadow-lg shadow-cyan-500/20 transition-all cursor-pointer"
+                >
+                  <Activity size={14} />
+                  <span>⚡ {activeTopic.demoPreset.label}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

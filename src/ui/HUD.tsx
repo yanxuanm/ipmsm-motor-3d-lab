@@ -2,11 +2,11 @@ import React, { useState, useCallback } from 'react';
 import { SimulationState, ElectricalValues, OperatingMode } from '../types/motor';
 import { CAMERA_PRESETS } from '../scene/cameraManager';
 import { Oscilloscope } from './Oscilloscope';
-import { PhysicsGuideModal, PhysicsTopicId } from './PhysicsGuideModal';
+import { PhysicsGuideModal, PhysicsTopicId, GuideModalTab } from './PhysicsGuideModal';
 import { LatexMath } from './LatexMath';
 import {
   Play, Pause, StepForward, RotateCcw, Eye, Layers, Compass,
-  Activity, Cpu, Sliders, ChevronDown, ChevronUp, Zap, BookOpen
+  Activity, Cpu, Sliders, ChevronDown, ChevronUp, Zap, BookOpen, GraduationCap
 } from './Icons';
 
 export function getComponentChineseName(id: string | null): string {
@@ -54,11 +54,21 @@ export const HUD: React.FC<HUDProps> = ({
   const [vectorTab, setVectorTab] = useState<'vectors' | 'torque' | 'foc' | 'thermal'>('vectors');
   const [guideOpen, setGuideOpen] = useState(false);
   const [guideTopic, setGuideTopic] = useState<PhysicsTopicId>('load_angle_mtpa');
+  const [guideTab, setGuideTab] = useState<GuideModalTab>('ladder');
+  const [guideStepIndex, setGuideStepIndex] = useState<number>(1);
 
   const openPhysicsTopic = useCallback((topic: PhysicsTopicId) => {
     setGuideTopic(topic);
+    setGuideTab('topics');
     setGuideOpen(true);
     // Close 3D part inspection card if open so modals don't overlap
+    onUpdateState({ selectedPartId: null });
+  }, [onUpdateState]);
+
+  const openPhysicsLadder = useCallback((stepNum: number = 1) => {
+    setGuideStepIndex(stepNum);
+    setGuideTab('ladder');
+    setGuideOpen(true);
     onUpdateState({ selectedPartId: null });
   }, [onUpdateState]);
 
@@ -115,6 +125,15 @@ export const HUD: React.FC<HUDProps> = ({
               <h1 className="text-sm font-bold tracking-wide text-white uppercase font-mono">
                 IPMSM 永磁同步电机 3D 电磁原理解析实验室
               </h1>
+              <button
+                type="button"
+                onClick={() => openPhysicsLadder(1)}
+                className="text-[10px] font-mono px-2.5 py-0.5 rounded-md bg-gradient-to-r from-emerald-950 to-cyan-950 hover:from-emerald-900 hover:to-cyan-900 text-emerald-300 border border-emerald-400/50 flex items-center gap-1 shadow-[0_0_10px_rgba(16,185,129,0.2)] transition-all cursor-pointer font-bold"
+                title="点击进入高中物理平权阶梯导读（从安培力到 FOC 矢量控制）"
+              >
+                <GraduationCap size={13} className="text-emerald-400" />
+                <span>🎓 高中物理平权导读 (5步搞懂电机)</span>
+              </button>
               <button
                 type="button"
                 onClick={() => openPhysicsTopic('8p48s')}
@@ -1004,6 +1023,8 @@ export const HUD: React.FC<HUDProps> = ({
       <PhysicsGuideModal
         isOpen={guideOpen}
         initialTopicId={guideTopic}
+        initialTab={guideTab}
+        initialStepIndex={guideStepIndex}
         onClose={handleCloseGuide}
         onApplyDemo={handleApplyDemo}
       />
