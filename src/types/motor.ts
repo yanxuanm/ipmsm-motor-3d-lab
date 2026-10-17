@@ -72,4 +72,5 @@ export interface ComponentInfo {
   description: string;
   engineeringChallenges: string;
   solutionInEV: string;
+  highSchoolBridge?: string;
 }
