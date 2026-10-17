@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #07090e;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Custom scrollbar for HUD panels */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(12, 16, 23, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(79, 172, 254, 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(79, 172, 254, 0.6);
+}
+
+/* Glassmorphism styling (optimized blur radius for 60FPS Retina WebGL) */
+.glass-panel {
+  background: rgba(11, 15, 24, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.45);
+}
+
+.glass-panel-glow {
+  background: rgba(11, 15, 24, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 242, 254, 0.28);
+  box-shadow: 0 0 20px rgba(0, 242, 254, 0.15), inset 0 0 15px rgba(0, 242, 254, 0.05);
+}
+
+.katex {
+  font-size: 1.02em !important;
+}
+
+.katex-display {
+  margin: 0.25em 0 !important;
+}
+
+/* Subtle glowing text */
+.glow-text-cyan {
+  text-shadow: 0 0 8px rgba(0, 242, 254, 0.6);
+}
+
+.glow-text-amber {
+  text-shadow: 0 0 8px rgba(255, 170, 0, 0.6);
+}
+
