@@ -133,27 +133,39 @@ export const HUD: React.FC<HUDProps> = ({
               <button
                 type="button"
                 onClick={() => openPhysicsLadder(1)}
-                className="text-[10px] font-mono px-2.5 py-0.5 rounded-md bg-gradient-to-r from-emerald-950 to-cyan-950 hover:from-emerald-900 hover:to-cyan-900 text-emerald-300 border border-emerald-400/50 flex items-center gap-1 shadow-[0_0_10px_rgba(16,185,129,0.2)] transition-all cursor-pointer font-bold"
+                className={`text-[10px] font-mono px-2.5 py-0.5 rounded-md flex items-center gap-1 transition-all cursor-pointer font-bold ${
+                  theme === 'light'
+                    ? 'bg-gradient-to-r from-emerald-100 to-teal-100 hover:from-emerald-200 hover:to-teal-200 text-emerald-800 border border-emerald-400 shadow-sm'
+                    : 'bg-gradient-to-r from-emerald-950 to-cyan-950 hover:from-emerald-900 hover:to-cyan-900 text-emerald-300 border border-emerald-400/50 shadow-[0_0_10px_rgba(16,185,129,0.2)]'
+                }`}
                 title="点击进入高中物理平权阶梯导读（从安培力到 FOC 矢量控制）"
               >
-                <GraduationCap size={13} className="text-emerald-400" />
+                <GraduationCap size={13} className={theme === 'light' ? 'text-emerald-700' : 'text-emerald-400'} />
                 <span>🎓 高中物理平权导读 (5步搞懂电机)</span>
               </button>
               <button
                 type="button"
                 onClick={() => openPhysicsTopic('8p48s')}
-                className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950 hover:bg-blue-900 text-blue-300 border border-blue-500/40 flex items-center gap-1 transition-colors cursor-pointer"
+                className={`text-[10px] font-mono px-2 py-0.5 rounded flex items-center gap-1 transition-colors cursor-pointer font-bold ${
+                  theme === 'light'
+                    ? 'bg-blue-100 hover:bg-blue-200 text-blue-800 border border-blue-400 shadow-sm'
+                    : 'bg-blue-950 hover:bg-blue-900 text-blue-300 border border-blue-500/40'
+                }`}
                 title="点击查看什么是 8极48槽 (8P48S) 与发卡式扁线绕组"
               >
                 <span>8P48S 发卡式扁线</span>
-                <span className="text-cyan-300 font-bold">?</span>
+                <span className={theme === 'light' ? 'text-blue-700 font-bold' : 'text-cyan-300 font-bold'}>?</span>
               </button>
               <button
                 type="button"
                 onClick={() => openPhysicsTopic('load_angle_mtpa')}
-                className="text-[10px] font-mono px-2.5 py-0.5 rounded-md bg-gradient-to-r from-cyan-950 to-indigo-950 hover:from-cyan-900 hover:to-indigo-900 text-cyan-300 border border-cyan-400/50 flex items-center gap-1 shadow-[0_0_10px_rgba(0,242,254,0.2)] transition-all cursor-pointer"
+                className={`text-[10px] font-mono px-2.5 py-0.5 rounded-md flex items-center gap-1 transition-all cursor-pointer font-bold ${
+                  theme === 'light'
+                    ? 'bg-gradient-to-r from-cyan-100 to-indigo-100 hover:from-cyan-200 hover:to-indigo-200 text-cyan-800 border border-cyan-400 shadow-sm'
+                    : 'bg-gradient-to-r from-cyan-950 to-indigo-950 hover:from-cyan-900 hover:to-indigo-900 text-cyan-300 border border-cyan-400/50 shadow-[0_0_10px_rgba(0,242,254,0.2)]'
+                }`}
               >
-                <BookOpen size={11} />
+                <BookOpen size={11} className={theme === 'light' ? 'text-cyan-700' : 'text-cyan-300'} />
                 <span>📖 物理与电磁原理全解 (LaTeX)</span>
               </button>
             </div>

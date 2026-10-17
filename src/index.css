@@ -278,3 +278,30 @@ html.light [class*="text-blue-300"] {
 html.light input[type="range"] {
   background-color: #cbd5e1 !important;
 }
+
+/* Light mode gradient stop variables for buttons and headers */
+html.light [class*="from-emerald-950"] {
+  --tw-gradient-from: #d1fae5 var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(209 250 229 / 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+html.light [class*="to-cyan-950"] {
+  --tw-gradient-to: #cffafe var(--tw-gradient-to-position) !important;
+}
+html.light [class*="from-cyan-950"] {
+  --tw-gradient-from: #cffafe var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(207 250 254 / 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+html.light [class*="to-indigo-950"] {
+  --tw-gradient-to: #e0e7ff var(--tw-gradient-to-position) !important;
+}
+html.light [class*="from-blue-950"] {
+  --tw-gradient-from: rgba(219, 234, 254, 0.8) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgba(219, 234, 254, 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+html.light [class*="to-slate-950"] {
+  --tw-gradient-to: #f8fafc var(--tw-gradient-to-position) !important;
+}
+
